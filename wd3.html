@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe: Tom and Jerry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #FFF9C4 0%, #FFE082 100%); /* Sunny yellow gradient */
+            color: #4A4A4A; /* Dark gray for text */
+            overflow: hidden;
+        }
+
+        .font-luckiest-guy {
+            font-family: 'Luckiest Guy', cursive;
+        }
+
+        /* Player Mark Styles */
+        .player-t-style { /* Tom */
+            color: #4A90E2; /* Classic Blue */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .player-j-style { /* Jerry */
+            color: #F5A623; /* Warm Orange */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            background-color: #FFFFFF; /* White cells */
+            border: 3px solid #A0522D; /* Sienna Brown border */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cell:hover:not(.disabled):not(.t):not(.j) {
+            background-color: #FFFDE7; /* Very light cream on hover */
+            transform: scale(1.03);
+            border-color: #D2691E; /* Chocolate brown on hover */
+        }
+
+        .cell.t, .cell.j { /* t and j are new classes for Tom and Jerry marks */
+            cursor: not-allowed;
+        }
+
+        .winning-cell {
+            animation: pulseWinTomAndJerry 1s infinite alternate;
+        }
+
+        @keyframes pulseWinTomAndJerry {
+            0% {
+                background-color: #FFD700; /* Gold */
+                box-shadow: 0 0 10px #FFD700, 0 0 15px #FFBF00;
+            }
+            100% {
+                background-color: #FFC107; /* Amber */
+                box-shadow: 0 0 15px #FFC107, 0 0 20px #FFA000;
+            }
+        }
+
+        .status-text {
+             /* Base color will be set by player-t-style or player-j-style */
+        }
+
+        .game-button { /* General button style */
+            background: linear-gradient(145deg, #FF7043, #FF5722); /* Playful Orange Gradient */
+            border: 2px solid #D84315; /* Deep Orange Border */
+            color: white;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15), inset 0 -2px 2px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .game-button:hover {
+            background: linear-gradient(145deg, #FF8A65, #FF7043);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.2), inset 0 -2px 3px rgba(0,0,0,0.1);
+            transform: translateY(-2px) scale(1.02);
+        }
+        .game-button:active {
+            transform: translateY(0px) scale(0.98);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.15), inset 0 -1px 1px rgba(0,0,0,0.1);
+        }
+
+        /* Modal Styling */
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: #FFF3E0; /* Light Orange White */
+            border: 3px solid #FB8C00; /* Orange Border */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .modal-button { /* Re-use game-button style or make specific */
+            background: linear-gradient(145deg, #64B5F6, #42A5F5); /* Playful Blue for modal button */
+            border: 2px solid #1E88E5;
+        }
+        .modal-button:hover {
+            background: linear-gradient(145deg, #90CAF9, #64B5F6);
+        }
+
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <header class="mb-8 text-center">
+        <h1 class="font-luckiest-guy text-6xl md:text-7xl player-t-style drop-shadow-md">Tom</h1>
+        <h2 class="font-luckiest-guy text-6xl md:text-7xl player-j-style drop-shadow-md -mt-3 md:-mt-4">&amp; Jerry</h2>
+        <p class="font-luckiest-guy text-3xl md:text-4xl text-gray-600 mt-2">Tic-Tac-Toe</p>
+    </header>
+
+    <main class="w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto p-4 sm:p-6 rounded-xl shadow-xl" style="background-color: rgba(255, 255, 255, 0.7);">
+        <div id="statusDisplay" class="font-nunito text-xl md:text-2xl font-semibold text-center mb-6 h-8 status-text">Player T's Turn</div>
+
+        <div id="gameBoard" class="grid grid-cols-3 gap-2 md:gap-3 aspect-square rounded-lg p-2 md:p-3" style="background-color: rgba(222,184,135, 0.3);"> {/* BurlyWood transparent */
+            </div>
+
+        <button id="resetButton" class="font-nunito w-full mt-8 py-3 px-6 text-lg font-bold rounded-lg game-button focus:outline-none focus:ring-4 focus:ring-orange-300">
+            Reset Game
+        </button>
+    </main>
+
+    <footer class="mt-12 text-center">
+        <p class="text-sm text-gray-500">&copy; 2025 Cat & Mouse Games. Let the chase begin!</p>
+    </footer>
+
+    <div id="gameOverModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="modal-content rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-sm text-center">
+            <h3 id="modalTitle" class="font-luckiest-guy text-4xl mb-4">Game Over!</h3>
+            <p id="modalMessage" class="text-lg mb-6 font-nunito"></p>
+            <button id="modalCloseButton" class="font-nunito game-button modal-button text-white py-2.5 px-8 rounded-lg text-md font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300">
+                Play Again!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game constants and variables
+        const gameBoard = document.getElementById('gameBoard');
+        const statusDisplay = document.getElementById('statusDisplay');
+        const resetButton = document.getElementById('resetButton');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCloseButton = document.getElementById('modalCloseButton');
+
+        let boardState = Array(9).fill(null);
+        let currentPlayer = 'T'; // Tom ('T') starts
+        let gameActive = true;
+        let cells = [];
+
+        const winningCombinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        // --- Game Initialization ---
+        function initializeBoard() {
+            gameBoard.innerHTML = '';
+            cells = [];
+            boardState.fill(null);
+            currentPlayer = 'T';
+            gameActive = true;
+            updateStatusDisplay(); // Use a helper for this
+            
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                // Added text-6xl for larger T/J, md:text-8xl for even larger on medium screens
+                cell.classList.add('cell', 'flex', 'items-center', 'justify-center', 'text-6xl', 'md:text-8xl', 'font-luckiest-guy', 'font-bold', 'cursor-pointer', 'rounded-md', 'aspect-square');
+                cell.dataset.index = i;
+                cell.addEventListener('click', handleCellClick);
+                gameBoard.appendChild(cell);
+                cells.push(cell);
+            }
+            hideModal();
+        }
+
+        // --- Update Status Display ---
+        function updateStatusDisplay() {
+            if (gameActive) {
+                statusDisplay.textContent = `Player ${currentPlayer}'s Turn`;
+                statusDisplay.className = `font-nunito text-xl md:text-2xl font-semibold text-center mb-6 h-8 status-text ${currentPlayer === 'T' ? 'player-t-style' : 'player-j-style'}`;
+            } else {
+                // Handled by endGame status update
+            }
+        }
+
+
+        // --- Event Handlers ---
+        function handleCellClick(event) {
+            const clickedCell = event.target;
+            const clickedCellIndex = parseInt(clickedCell.dataset.index);
+
+            if (boardState[clickedCellIndex] !== null || !gameActive) {
+                return;
+            }
+
+            boardState[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+            // Add player-specific style class for color
+            clickedCell.classList.add(currentPlayer === 'T' ? 'player-t-style' : 'player-j-style');
+            clickedCell.classList.add(currentPlayer.toLowerCase()); // Adds 't' or 'j' class
+            clickedCell.classList.add('disabled');
+
+            if (checkWin()) {
+                endGame(false);
+            } else if (boardState.every(cell => cell !== null)) {
+                endGame(true); // Draw
+            } else {
+                switchPlayer();
+            }
+        }
+
+        resetButton.addEventListener('click', initializeBoard);
+        modalCloseButton.addEventListener('click', initializeBoard);
+
+        // --- Game Logic ---
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 'T' ? 'J' : 'T';
+            updateStatusDisplay();
+        }
+
+        function checkWin() {
+            for (const combination of winningCombinations) {
+                const [a, b, c] = combination;
+                if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+                    combination.forEach(index => cells[index].classList.add('winning-cell'));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function endGame(isDraw) {
+            gameActive = false;
+            let titleText = '';
+            let messageText = '';
+            let titleClass = '';
+
+            if (isDraw) {
+                titleText = "It's a Draw!";
+                messageText = "A classic chase with no winner! Try again?";
+                statusDisplay.textContent = "Draw Game!";
+                statusDisplay.className = "font-nunito text-xl md:text-2xl font-semibold text-center mb-6 h-8 status-text text-gray-600"; // Neutral color for draw
+                titleClass = "text-gray-700"; // Modal title color for draw
+            } else {
+                const winnerName = currentPlayer === 'T' ? "Tom" : "Jerry";
+                titleText = `${winnerName} Wins!`;
+                messageText = `${winnerName} outsmarted the other this time! Congratulations!`;
+                statusDisplay.textContent = `${winnerName} Wins!`;
+                statusDisplay.className = `font-nunito text-xl md:text-2xl font-semibold text-center mb-6 h-8 status-text ${currentPlayer === 'T' ? 'player-t-style' : 'player-j-style'}`;
+                titleClass = currentPlayer === 'T' ? 'player-t-style' : 'player-j-style'; // Modal title color for winner
+            }
+            cells.forEach(cell => cell.classList.add('disabled'));
+            showModal(titleText, messageText, titleClass);
+        }
+
+        // --- Modal Functions ---
+        function showModal(title, message, titleColorClass) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalTitle.className = `font-luckiest-guy text-4xl mb-4 ${titleColorClass}`; // Apply dynamic color class
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function hideModal() {
+            gameOverModal.classList.add('hidden');
+        }
+
+        // --- Initial Game Setup ---
+        document.addEventListener('DOMContentLoaded', initializeBoard);
+    </script>
+</body>
+</html>
